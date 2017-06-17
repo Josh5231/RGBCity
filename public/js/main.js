@@ -5,20 +5,39 @@ var Commodity = function(type,baseValue){
   this.baseValue = baseValue || 1;
 };
 
+//Master Commodity List is use to establish all possible types of commodities and there base values
+var MasterComList = {};
+
+var Player = function( data ){
+  this.name = data.name || "default";
+  this.money = data.money || 0;
+  this.truck = data.truck || { type:"pickup" , maxStorage: 10, storage: {} };
+};
+
 var City = function(data){
   this.name = data.name || "default";
   this.storage = data.storage || {};
   this.usageRates = data.usage || {};
-  //this.mines = data.mines || [];
   this.producers = data.pro || [];
-  // [ { type:"Mine", outType:"String", outPut:Number  }  || { type:"Factory", outType:"String", outPut:Number, input:[{ type:String, rate:Number },...]  }, storage:[ { type:String, target:Number, amount:Number } ]   ]
-
+  // [ { type:"Mine", outType:"String", output:Number  }
+  // { type:"Factory", outType:"String", outPut:Number, input:[{ type:String, rate:Number },...]  }, storage:[ { type:String, target:Number, amount:Number } ]   ]
+  this.prices = {};
+  
   this.roads = data.roads || [];
   this.state = data.state || { sat: 100, danger: 0  };
   this.population = data.pop || 25;
 };
 
 City.prototype.update = function() {
+
+  //update Mines
+  for(var i in this.producers){
+    if( this.producers[i].type === "Mine" ){
+      if( !this.storage[this.producers[i].outType] ) { this.storage[this.producers[i].outType] = 0; }
+      this.storage[ this.producers[i].outType ] += this.producers[i].output;
+    }
+    //todo - Add support for factories
+  }
 
   var target = 0;
   var sat = 0;
@@ -32,7 +51,7 @@ City.prototype.update = function() {
       }
       else {
         if( this.storage[i] ) { //else if there are some in storage
-          var per = Math.floor( this.storage[i] / this.usageRates );
+          var per = Math.floor( this.storage[i] / this.usageRates[i] );
           this.storage[i] -= ( per * this.useageRate[i] );
           sat += per;
         }
@@ -55,6 +74,37 @@ City.prototype.update = function() {
      this.population -= Math.floor( this.population * 0.1 );
    }
 
+   this.prices = this.getPrices();
 
+};
 
+City.prototype.getPrices = function() {
+  var out = {};
+  var target = 0;
+  for( var i in this.storage ){
+    // Target storage levels === 30 * usageRate for each Commodity
+    // Price for commodity === ( Target / Supply ) * baseRate
+    target = this.useageRate[i] * this.population * 30;
+    out[i] = ( target / this.storage[i] ) * MasterComList[i].baseRate;
+  }
+  return out;
+};
+
+City.prototype.buyCom = function( ply, type, amount ) {
+  if( !this.prices[type] ){ return false; }
+  if( ply.money >= this.prices[type] * amount ){
+    if( ply.storage[type] ){ ply.storage[type] += amount; }
+    else { ply.storage[type] = amount; }
+    ply.money -= this.prices[type] * amount;
+    return true;
+  }
+  return false;
+};
+
+City.prototype.sellCom = function( ply, type, amount ) {
+  if( !this.prices[type] ){ return false; }
+  if( !ply.storage[type] || ply.storage[type]<amount ){ return false; }
+  ply.storage[type] -= amount;
+  ply.money += this.prices[type] * amount;
+  return true;
 };

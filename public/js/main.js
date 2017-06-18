@@ -14,6 +14,14 @@ var Player = function( data ){
   this.truck = data.truck || { type:"pickup" , maxStorage: 10, storage: {} };
 };
 
+Player.prototype.getCount = function(){
+  var out = 0;
+  for( var i in this.truck.storage ){
+    out +=  this.truck.storage[i];
+  }
+  return i;
+};
+
 var City = function(data){
   this.name = data.name || "default";
   this.storage = data.storage || {};
@@ -92,7 +100,7 @@ City.prototype.getPrices = function() {
 
 City.prototype.buyCom = function( ply, type, amount ) {
   if( !this.prices[type] ){ return false; }
-  if( ply.money >= this.prices[type] * amount ){
+  if( ply.money >= this.prices[type] * amount && ply.getCount()+amount < ply.truck.maxStorage ){
     if( ply.storage[type] ){ ply.storage[type] += amount; }
     else { ply.storage[type] = amount; }
     ply.money -= this.prices[type] * amount;
@@ -103,7 +111,7 @@ City.prototype.buyCom = function( ply, type, amount ) {
 
 City.prototype.sellCom = function( ply, type, amount ) {
   if( !this.prices[type] ){ return false; }
-  if( !ply.storage[type] || ply.storage[type]<amount ){ return false; }
+  if( !ply.storage[type] || ply.storage[type] < amount ){ return false; }
   ply.storage[type] -= amount;
   ply.money += this.prices[type] * amount;
   return true;

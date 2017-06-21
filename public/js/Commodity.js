@@ -10,6 +10,10 @@
   };
 
   //Master Commodity List is use to establish all possible types of commodities and there base values
-  global.GameObj.MasterComList = {};
+  global.GameObj.MasterComList = {
+    "Red": 10,
+    "Green": 10,
+    "Blue": 10
+  };
 
 } (window) );

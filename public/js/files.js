@@ -8,4 +8,5 @@ require(
 
   ,function(){
   //init game here...
+  setupGame();
 })

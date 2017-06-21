@@ -74,17 +74,17 @@
     for( var i in this.storage ){
       // Target storage levels === 30 * usageRate for each Commodity
       // Price for commodity === ( Target / Supply ) * baseRate
-      target = this.useageRate[i] * this.population * 30;
-      out[i] = ( target / this.storage[i] ) * MasterComList[i].baseRate;
+      target = this.usageRates[i] * this.population * 30;
+      out[i] = Math.floor( ( target / this.storage[i] ) * GameObj.MasterComList[i] );
     }
     return out;
   };
 
   global.GameObj.City.prototype.buyCom = function( ply, type, amount ) {
     if( !this.prices[type] ){ return false; }
-    if( ply.money >= this.prices[type] * amount && ply.getCount()+amount < ply.truck.maxStorage ){
-      if( ply.storage[type] ){ ply.storage[type] += amount; }
-      else { ply.storage[type] = amount; }
+    if( ply.money >= this.prices[type] * amount && ply.getCount()+amount <= ply.truck.maxStorage ){
+      if( ply.truck.storage[type] ){ ply.truck.storage[type] += amount; }
+      else { ply.truck.storage[type] = amount; }
       ply.money -= this.prices[type] * amount;
       return true;
     }
@@ -93,9 +93,10 @@
 
   global.GameObj.City.prototype.sellCom = function( ply, type, amount ) {
     if( !this.prices[type] ){ return false; }
-    if( !ply.storage[type] || ply.storage[type] < amount ){ return false; }
-    ply.storage[type] -= amount;
-    ply.money += this.prices[type] * amount;
+    if( !ply.truck.storage[type] || ply.truck.storage[type] < amount ){ return false; }
+    ply.truck.storage[type] -= amount;
+    ply.money += Math.ceil( this.prices[type] * amount );
+    this.storage[type] += amount;
     return true;
   };
 

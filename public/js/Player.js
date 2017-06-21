@@ -14,7 +14,7 @@ global.GameObj.Player.prototype.getCount = function(){
   for( var i in this.truck.storage ){
     out +=  this.truck.storage[i];
   }
-  return i;
+  return out;
 };
 
 }(window) );

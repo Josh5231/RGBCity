@@ -13,7 +13,9 @@
   global.GameObj.MasterComList = {
     "Red": 10,
     "Green": 10,
-    "Blue": 10
+    "Blue": 5,
+    "White": 15,
+    "Black": 15
   };
 
 } (window) );

@@ -42,7 +42,7 @@
         else {
           if( this.storage[i] ) { //else if there are some in storage
             var per = Math.floor( this.storage[i] / this.usageRates[i] );
-            this.storage[i] -= ( per * this.useageRate[i] );
+            this.storage[i] -= ( per * this.usageRates[i] );
             sat += per;
           }
         }
@@ -53,9 +53,9 @@
     //If enough of the demand is met, increase the population
     if( this.state.sat > 0.9 ){
       if( this.state.danger > 0 ){ this.state.danger-=1; }
-      if( this.population <100 ){ this.population = Math.floor( this.population * 0.2 ); }
-      else if( this.population >=100 && this.population<1000 ){ this.population = Math.floor( this.population * 0.15 ); }
-      else { this.population = Math.floor( this.population * 0.05 ); }
+      if( this.population <100 ){ this.population += Math.floor( this.population * 0.2 ); }
+      else if( this.population >=100 && this.population<1000 ){ this.population += Math.floor( this.population * 0.15 ); }
+      else { this.population += Math.floor( this.population * 0.05 ); }
      }
 
      //If the demand is not met decrease population
@@ -76,6 +76,7 @@
       // Price for commodity === ( Target / Supply ) * baseRate
       target = this.usageRates[i] * this.population * 30;
       out[i] = Math.floor( ( target / this.storage[i] ) * GameObj.MasterComList[i] );
+      if( out[i]>1000 ){ out[i] = 1000; }
     }
     return out;
   };

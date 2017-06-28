@@ -6,7 +6,7 @@ if(!global.GameObj){ global.GameObj = {}; }
 global.GameObj.Player = function( data ){
   this.name = data.name || "default";
   this.money = data.money || 0;
-  this.truck = data.truck || { type:"pickup" , maxStorage: 10, storage: {} };
+  this.truck = data.truck || { type:"pickup" , maxStorage: 100, storage: {} };
   this.curCity = data.curCity || 0; //City index #
 };
 

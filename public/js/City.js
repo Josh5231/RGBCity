@@ -14,6 +14,7 @@
     this.prices = {};
 
     this.roads = data.roads || [];
+    // [ { city:Number, time:Number }, ...]  city === City index number / time === Number of days to travel from 'this' city to the target city
     this.state = data.state || { sat: 100, danger: 0  };
     this.population = data.pop || 25;
   };
@@ -87,6 +88,7 @@
       if( ply.truck.storage[type] ){ ply.truck.storage[type] += amount; }
       else { ply.truck.storage[type] = amount; }
       ply.money -= this.prices[type] * amount;
+      this.storage[type] -= amount;
       return true;
     }
     return false;

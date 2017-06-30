@@ -8,6 +8,7 @@ global.GameObj.Player = function( data ){
   this.money = data.money || 0;
   this.truck = data.truck || { type:"pickup" , maxStorage: 100, storage: {} };
   this.curCity = data.curCity || 0; //City index #
+  this.npcData = data.npcData || { trav: 0 };
 };
 
 global.GameObj.Player.prototype.getCount = function(){

@@ -181,7 +181,7 @@ var setupGame = function(){
               name:"City 1",
               storage:{ "Red":1000, "Green":1000, "Blue":1000, "White":500, "Black":500 },
               usage:{ "Red":1, "Green":1, "Blue":1, "White":0.5, "Black":0.2 },
-              pro: [ { type:"Mine", outType:"Red", output: 100 } ],
+              pro: [ { type:"Mine", outType:"Red", output: 500 } ],
               pop: 25,
               roads: [ { city:1, time: 2 }, { city:2, time: 2 } ]
             }),
@@ -192,7 +192,7 @@ var setupGame = function(){
             name:"City 2",
             storage:{ "Red":1000, "Green":1000, "Blue":1000, "White":500, "Black":500   },
             usage:{ "Red":1, "Green":1, "Blue":1, "White":0.75, "Black":0.5 },
-            pro: [ { type:"Mine", outType:"Green", output: 100 } ],
+            pro: [ { type:"Mine", outType:"Green", output: 500 } ],
             pop: 40,
             roads: [ { city:0, time: 2 }, { city:2, time: 3 }, { city:3, time:4 } ]
            }),
@@ -203,7 +203,7 @@ var setupGame = function(){
             name:"City 3",
             storage:{ "Red":1000, "Green":1000, "Blue":1000, "White":500, "Black":500   },
              usage:{ "Red":1, "Green":1, "Blue":1, "White":0.75, "Black":0.5 },
-             pro: [ { type:"Mine", outType:"Blue", output: 100 } ],
+             pro: [ { type:"Mine", outType:"Blue", output: 500 } ],
              pop: 25,
              roads: [ { city:0, time: 2 }, { city:1, time: 3 }, { city:3, time:4 } ]
             }),
@@ -214,7 +214,7 @@ var setupGame = function(){
             name:"City 4",
             storage:{ "Red":1000, "Green":1000, "Blue":1000, "White":500, "Black":500   },
             usage:{ "Red":1, "Green":1, "Blue":1, "White":0.75, "Black":0.5 },
-            pro: [ { type:"Mine", outType:"White", output: 75 } ],
+            pro: [ { type:"Mine", outType:"White", output: 300 } ],
             pop: 50,
             roads: [ { city:1, time: 3 }, { city:2, time: 3 }, { city:4, time:3 }, { city:5, time:1 } ]
            }),
@@ -225,7 +225,7 @@ var setupGame = function(){
             name:"City 5",
             storage:{ "Red":1000, "Green":1000, "Blue":1000, "White":500, "Black":500   },
             usage:{ "Red":1, "Green":1, "Blue":1, "White":0.75, "Black":0.5 },
-            pro: [ { type:"Mine", outType:"Black", output: 50 } ],
+            pro: [ { type:"Mine", outType:"Black", output: 500 } ],
             pop: 30,
             roads: [ { city:3, time: 3 }, { city:5, time: 3 } ]
            }),
@@ -236,7 +236,7 @@ var setupGame = function(){
             name:"City 6",
             storage:{ "Red":1000, "Green":1000, "Blue":1000, "White":500, "Black":500   },
             usage:{ "Red":1, "Green":1, "Blue":1, "White":0.75, "Black":0.5 },
-            pro: [ { type:"Mine", outType:"Red", output: 100 }, { type:"Mine", outType:"Green", output: 100 } ],
+            pro: [ { type:"Mine", outType:"Red", output: 400 }, { type:"Mine", outType:"Green", output: 400 } ],
             pop: 45,
             roads: [ { city:4, time:3 }, { city:3, time:1 }]
            }),
@@ -249,10 +249,14 @@ var setupGame = function(){
 
 
   //test...
-  var City1 = GameObj.curData.gameMap.cities[0].city;
-  var City2 = GameObj.curData.gameMap.cities[1].city;
-  var Player1 = GameObj.curData.player;
-  Player1.curCity = 0;
+  var npc = GameObj.curData.npcs;
+  npc.push(new GameObj.Player({ name:"Bot1", money:1000, curCity:0, truck:{ type:"Semi", maxStorage:10000, storage:{} } }));
+  npc.push(new GameObj.Player({ name:"Bot2", money:1000, curCity:1, truck:{ type:"Semi", maxStorage:10000, storage:{} } }));
+  npc.push(new GameObj.Player({ name:"Bot3", money:1000, curCity:2, truck:{ type:"Semi", maxStorage:10000, storage:{} } }));
+  npc.push(new GameObj.Player({ name:"Bot4", money:1000, curCity:3, truck:{ type:"Semi", maxStorage:10000, storage:{} } }));
+  npc.push(new GameObj.Player({ name:"Bot5", money:1000, curCity:4, truck:{ type:"Semi", maxStorage:10000, storage:{} } }));
+  npc.push(new GameObj.Player({ name:"Bot6", money:1000, curCity:5, truck:{ type:"Semi", maxStorage:10000, storage:{} } }));
+
   for(var i = 0; i< GameObj.curData.gameMap.cities.length; i++ ){
     GameObj.curData.gameMap.cities[i].city.update();
   }
@@ -260,10 +264,67 @@ var setupGame = function(){
 
 };
 
+var updateNPCs = function(){
+  var npcs = GameObj.curData.npcs;
+  var curCity,storageAva, ava;
+
+  for( var i = 0; i < npcs.length; i++ ){
+    curCity = GameObj.curData.gameMap.cities[ npcs[i].curCity ].city;
+    if(npcs[i].npcData.trav > 0 ){  npcs[i].npcData.trav -= 1; }
+
+    else {
+      //1. If items in storage check if needed and sell if so
+      if( npcs[i].getCount() > 0 ){//if it has inventory
+        for( var t in npcs[i].truck.storage ){
+          //check if this city needs it
+          if( curCity.storage[t] < ( curCity.usageRates[t] * curCity.population ) ){
+            curCity.sellCom( npcs[i], t, npcs[i].truck.storage[t] ); //Sell all in storage
+          }
+        }
+      }
+      //2. Check city storage for coms that it has extra of and buy up as much as it can
+      for( var t in curCity.storage ){ //loop through each item in storage
+          ava = Math.floor( curCity.storage[t] - ( curCity.usageRates[t] * curCity.population *2 ) );
+          if( ava > 0 ){ //check if there are extra
+            storageAva = npcs[i].truck.maxStorage - npcs[i].getCount();
+            if( ava > 0 && ava <= storageAva ){ //if we can fit them all
+              if( ava * curCity.prices[t] <= npcs[i].money ){ //if it has enough money
+                curCity.buyCom( npcs[i], t, ava );
+              }
+              else { //If we don't have enough money
+                  ava = Math.floor( npcs[i].money / curCity.prices[t] );
+                  //console.log(" *** ava - "+ava);
+                  if( ava > storageAva ){ ava = storageAva; }
+                  if( ava > 0 ){
+                    curCity.buyCom( npcs[i], t, ava );
+                  }
+              }
+            }
+            else { //If we don't have enough money
+                ava = Math.floor( npcs[i].money / curCity.prices[t] );
+                //console.log(" *** ava - "+ava);
+                if( ava > storageAva ){ ava = storageAva; }
+                if( ava > 0 ){
+                  curCity.buyCom( npcs[i], t, ava );
+                }
+            }
+
+          }
+      }
+      //3. Randomly select a road to the next city and set it to "go there"
+      var next = curCity.roads[ Math.floor( Math.random() * curCity.roads.length ) ];
+      npcs[i].curCity = next.city;
+      npcs[i].npcData.trav = next.time;
+    }
+  }
+}
+
 var progressGame = function(days){
+  console.log("-------------------------");
   for(var i = 0; i< GameObj.curData.gameMap.cities.length; i++ ){
     GameObj.curData.gameMap.cities[i].city.update();
   }
+  updateNPCs();
   if(days>1){ progressGame(days-1); }
   return;
 };

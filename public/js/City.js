@@ -89,6 +89,7 @@
       else { ply.truck.storage[type] = amount; }
       ply.money -= this.prices[type] * amount;
       this.storage[type] -= amount;
+      this.prices = this.getPrices();
       return true;
     }
     return false;
@@ -100,6 +101,7 @@
     ply.truck.storage[type] -= amount;
     ply.money += Math.ceil( this.prices[type] * amount );
     this.storage[type] += amount;
+    this.prices = this.getPrices();
     return true;
   };
 
